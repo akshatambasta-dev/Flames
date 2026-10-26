@@ -36,13 +36,13 @@ def calculate_flames(player1_name, player2_name):
     # Count letters remaining in both names.
     cnt = len(n1) + len(n2)
 
-    # Original FLAMES relationship list.
+    # Updated relationship options, in the requested order.
     res = [
+        "Classmate",
         "Friends",
-        "Lovers",
-        "Affectionate",
-        "Marriage",
         "Enemies",
+        "Strangers",
+        "Best Friends",
         "Siblings"
     ]
 
