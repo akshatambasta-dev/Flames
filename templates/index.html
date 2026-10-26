@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f8f6f1">
+  <meta name="theme-color" content="#eef4ff">
   <title>FLAMES — Relationship Calculator</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
@@ -17,13 +17,13 @@
     <section class="hero" aria-labelledby="page-title">
       <p class="eyebrow">A LITTLE NAME GAME</p>
       <h1 id="page-title">Two names.<br><span>One FLAMES result.</span></h1>
-      <p class="intro">Enter two names and let the classic FLAMES game do its thing.</p>
+      <p class="intro">Enter two names and discover what the name game has in store.</p>
 
       <form class="calculator" method="post" action="/">
         <label for="player1">Your name</label>
         <input id="player1" name="player1" type="text" maxlength="80" placeholder="e.g. Rahul" value="{{ player1 }}" autocomplete="given-name" required>
 
-        <div class="heart-divider" aria-hidden="true"><span></span><b>♥</b><span></span></div>
+        <div class="connection-divider" aria-hidden="true"><span></span><b>✦</b><span></span></div>
 
         <label for="player2">Their name</label>
         <input id="player2" name="player2" type="text" maxlength="80" placeholder="e.g. Priya" value="{{ player2 }}" autocomplete="off" required>
@@ -32,7 +32,7 @@
           <p class="message error" role="alert">{{ error }}</p>
         {% endif %}
 
-        <button type="submit">Find our FLAMES <span aria-hidden="true">↗</span></button>
+        <button type="submit">Find our result <span aria-hidden="true">↗</span></button>
         <p class="privacy-note">Names are used only to calculate this result.</p>
       </form>
     </section>
@@ -40,25 +40,26 @@
     {% if result %}
     <section class="result-card" aria-live="polite" aria-labelledby="result-title">
       <p class="eyebrow">YOUR RESULT</p>
-      <div class="result-heart" aria-hidden="true">♥</div>
+      <div class="result-symbol" aria-hidden="true">✦</div>
       <h2 id="result-title">{{ result.relationship }}</h2>
-      <p class="result-copy">The FLAMES result for <strong>{{ player1 }}</strong> and <strong>{{ player2 }}</strong>.</p>
+      <p class="result-copy">The result for <strong>{{ player1 }}</strong> and <strong>{{ player2 }}</strong>.</p>
       <div class="result-detail"><span>Letters remaining</span><strong>{{ result.remaining_letters }}</strong></div>
       <a class="try-again" href="/">Try different names <span aria-hidden="true">↻</span></a>
-      <p class="disclaimer">FLAMES is a playful name game, not a real measure of compatibility.</p>
+      <p class="disclaimer">This is a playful name game, not a real measure of compatibility.</p>
     </section>
     {% endif %}
 
     <section class="how-it-works" aria-labelledby="how-title">
-      <p class="eyebrow">THE CLASSIC GAME</p>
-      <h2 id="how-title">How FLAMES works</h2>
-      <div class="flames-letters" aria-label="Friends, Lovers, Affectionate, Marriage, Enemies, Siblings">
-        <span>F</span><span>L</span><span>A</span><span>M</span><span>E</span><span>S</span>
+      <p class="eyebrow">SIX POSSIBLE RESULTS</p>
+      <h2 id="how-title">How the game works</h2>
+      <div class="relationship-options">
+        <span>Classmate</span><span>Friends</span><span>Enemies</span>
+        <span>Strangers</span><span>Best Friends</span><span>Siblings</span>
       </div>
       <p>Common letters are removed from both names. The remaining letter count is used to eliminate options until one result is left.</p>
     </section>
 
-    <footer><span>Made for fun</span><span>Not a compatibility test</span></footer>
+    <footer><span>Made for fun</span><span>Just a name game</span></footer>
   </main>
 </body>
 </html>
