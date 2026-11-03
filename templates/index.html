@@ -19,20 +19,24 @@
       <h1 id="page-title">Two names.<br><span>One FLAMES result.</span></h1>
       <p class="intro">Enter two names and discover what the name game has in store.</p>
 
-      <form class="calculator" method="post" action="/">
+      <form class="calculator" method="post" action="/" id="flames-form">
         <label for="player1">Your name</label>
         <input id="player1" name="player1" type="text" maxlength="80" placeholder="e.g. Rahul" value="{{ player1 }}" autocomplete="given-name" required>
+        <div class="name-float" id="float1" aria-hidden="true"></div>
 
         <div class="connection-divider" aria-hidden="true"><span></span><b>✦</b><span></span></div>
 
         <label for="player2">Their name</label>
         <input id="player2" name="player2" type="text" maxlength="80" placeholder="e.g. Priya" value="{{ player2 }}" autocomplete="off" required>
+        <div class="name-float" id="float2" aria-hidden="true"></div>
 
         {% if error %}
           <p class="message error" role="alert">{{ error }}</p>
         {% endif %}
 
-        <button type="submit">Find our result <span aria-hidden="true">↗</span></button>
+        <div class="letter-stage" id="letter-stage" aria-live="polite" aria-label="Letter matching animation"></div>
+        <p class="stage-caption" id="stage-caption" aria-live="polite"></p>
+        <button type="submit" id="calculate-button">Find our result <span aria-hidden="true">↗</span></button>
         <p class="privacy-note">Names are used only to calculate this result.</p>
       </form>
     </section>
@@ -61,5 +65,111 @@
 
     <footer><span>Made for fun</span><span>Just a name game</span></footer>
   </main>
+  <script>
+  (() => {
+    const form = document.getElementById('flames-form');
+    const fields = [
+      { input: document.getElementById('player1'), float: document.getElementById('float1') },
+      { input: document.getElementById('player2'), float: document.getElementById('float2') }
+    ];
+    const stage = document.getElementById('letter-stage');
+    const caption = document.getElementById('stage-caption');
+    let animationToken = 0;
+
+    // Small, purely visual floating letter particles while a name is being entered.
+    fields.forEach(({input, float}) => {
+      input.addEventListener('input', () => {
+        float.replaceChildren();
+        const value = input.value.trim().replace(/\s+/g, '');
+        if (!value) return;
+        const chars = [...value].slice(-12);
+        chars.forEach((char, index) => {
+          const particle = document.createElement('span');
+          particle.className = 'floating-letter';
+          particle.textContent = char.toUpperCase();
+          particle.style.setProperty('--i', index);
+          particle.style.setProperty('--drift', ((index % 3) - 1) * 13 + 'px');
+          float.appendChild(particle);
+        });
+      });
+    });
+
+    // Find matching characters one-to-one, mirroring the server's common-letter removal.
+    function findMatches(a, b) {
+      const left = [...a.toLowerCase().replace(/\s/g, '')];
+      const right = [...b.toLowerCase().replace(/\s/g, '')];
+      const used = new Set();
+      const matches = [];
+      left.forEach((char, leftIndex) => {
+        const rightIndex = right.findIndex((other, index) => other === char && !used.has(index));
+        if (rightIndex !== -1) {
+          used.add(rightIndex);
+          matches.push({ char, leftIndex, rightIndex });
+        }
+      });
+      return { left, right, matches };
+    }
+
+    function makeLetterRow(chars, side, matches) {
+      const row = document.createElement('div');
+      row.className = 'letter-row';
+      row.dataset.side = side;
+      chars.forEach((char, index) => {
+        const chip = document.createElement('span');
+        chip.className = 'letter-chip';
+        chip.textContent = char.toUpperCase();
+        chip.dataset.index = index;
+        const matched = matches.some(m => side === 'left' ? m.leftIndex === index : m.rightIndex === index);
+        if (matched) chip.classList.add('is-match');
+        row.appendChild(chip);
+      });
+      return row;
+    }
+
+    form.addEventListener('submit', async (event) => {
+      const a = fields[0].input.value.trim();
+      const b = fields[1].input.value.trim();
+      if (!a || !b) return; // Let native required validation handle empty input.
+      event.preventDefault();
+      const token = ++animationToken;
+      const {left, right, matches} = findMatches(a, b);
+      stage.replaceChildren();
+      stage.classList.add('is-visible');
+      caption.textContent = 'Comparing the letters in both names…';
+
+      const rowA = makeLetterRow(left, 'left', matches);
+      const rowB = makeLetterRow(right, 'right', matches);
+      stage.append(rowA, rowB);
+
+      const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const step = reducedMotion ? 30 : 420;
+
+      for (let i = 0; i < matches.length; i++) {
+        if (token !== animationToken) return;
+        const match = matches[i];
+        const chipA = rowA.children[match.leftIndex];
+        const chipB = rowB.children[match.rightIndex];
+        chipA.classList.add('slash-now');
+        chipB.classList.add('slash-now');
+        caption.textContent = 'Matching letter found: ' + match.char.toUpperCase();
+        await delay(step);
+        chipA.classList.remove('slash-now');
+        chipB.classList.remove('slash-now');
+        chipA.classList.add('is-removed');
+        chipB.classList.add('is-removed');
+        await delay(reducedMotion ? 10 : 130);
+      }
+
+      if (token !== animationToken) return;
+      const count = left.length + right.length - matches.length * 2;
+      caption.textContent = matches.length
+        ? matches.length + ' common letter' + (matches.length === 1 ? '' : 's') + ' removed. ' + count + ' letter' + (count === 1 ? '' : 's') + ' remain.'
+        : 'No common letters found. Ready to reveal your result!';
+      await delay(reducedMotion ? 50 : 500);
+      if (token === animationToken) form.submit();
+    });
+  })();
+  </script>
 </body>
 </html>
